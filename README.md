@@ -12,3 +12,7 @@ Current milestone: real animated-GIF playback app on Old/New 2DS/3DS hardware.
 `python tools/pack_gif.py your.gif wallpaper.awp`
 
 The runtime format is deliberately simple so the exact same frame pack can later be consumed by the HOME Menu hook.
+
+
+## Flicker fix
+This revision only swaps framebuffers when a new GIF frame is drawn, eliminating the 60Hz stale-buffer flashing from the first build.

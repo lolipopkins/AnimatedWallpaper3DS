@@ -100,6 +100,8 @@ int main(int argc, char **argv) {
         if (down & KEY_A) paused = !paused;
 
         u64 now = svcGetSystemTick();
+        bool drewFrame = false;
+
         if (!paused && now >= nextTick) {
             long off = (long)sizeof(h) + (long)idx * (long)h.frame_bytes;
             if (fseek(f, off, SEEK_SET) != 0 ||
@@ -109,15 +111,21 @@ int main(int argc, char **argv) {
             }
 
             draw_frame_top(frame, h.width, h.height);
-            GSPGPU_FlushDataCache(frame, h.frame_bytes);
 
             idx++;
             if (idx >= h.frame_count) idx = 0;
             nextTick = now + frameTicks;
+            drewFrame = true;
         }
 
-        gfxFlushBuffers();
-        gfxSwapBuffers();
+        // Only present a new top-screen buffer when we actually drew a new GIF frame.
+        // Swapping every VBlank while drawing at 10 FPS causes the two buffers to
+        // alternate between new/stale images, which looks like intense flashing.
+        if (drewFrame) {
+            gfxFlushBuffers();
+            gfxSwapBuffers();
+        }
+
         gspWaitForVBlank();
     }
 
